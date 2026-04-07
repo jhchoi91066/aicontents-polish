@@ -1,0 +1,4 @@
+staged_ts=$(git diff --cached --name-only --diff-filter=ACM | grep -E '\.(ts|tsx|js|jsx|json)$' | head -1)
+if [ -n "$staged_ts" ]; then
+  npx biome check --write --staged src/ tests/
+fi

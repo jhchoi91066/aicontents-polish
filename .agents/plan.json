@@ -1,0 +1,32 @@
+{
+	"title": "TD-004: AI Provider 추상화",
+	"approach": "C: Provider 인터페이스 + 내장 Gemini provider",
+	"tasks": [
+		{
+			"id": 1,
+			"desc": "AIProvider 인터페이스 + defineProvider 정의",
+			"file": "src/ai/types.ts",
+			"status": "pending"
+		},
+		{ "id": 2, "desc": "geminiProvider 구현", "file": "src/ai/gemini.ts", "status": "pending" },
+		{
+			"id": 3,
+			"desc": "src/ai/index.ts re-export 리팩토링",
+			"file": "src/ai/index.ts",
+			"status": "pending"
+		},
+		{
+			"id": 4,
+			"desc": "tsup 빌드 엔트리포인트 확인",
+			"file": "tsup.config.ts",
+			"status": "pending"
+		},
+		{
+			"id": 5,
+			"desc": "테스트 업데이트 + provider 테스트 추가",
+			"file": "tests/ai/ai.test.ts",
+			"status": "pending"
+		},
+		{ "id": 6, "desc": "package.json peer dep 확인", "file": "package.json", "status": "pending" }
+	]
+}

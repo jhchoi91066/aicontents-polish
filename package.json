@@ -1,0 +1,75 @@
+{
+	"name": "llm-polish",
+	"version": "0.1.0",
+	"description": "AI Content Quality Toolkit — detect, analyze, and remove AI-generated text artifacts",
+	"type": "module",
+	"main": "./dist/index.cjs",
+	"module": "./dist/index.js",
+	"types": "./dist/index.d.ts",
+	"exports": {
+		".": {
+			"types": "./dist/index.d.ts",
+			"import": "./dist/index.js",
+			"require": "./dist/index.cjs"
+		},
+		"./ai": {
+			"types": "./dist/ai/index.d.ts",
+			"import": "./dist/ai/index.js",
+			"require": "./dist/ai/index.cjs"
+		}
+	},
+	"files": [
+		"dist"
+	],
+	"scripts": {
+		"build": "tsup",
+		"dev": "tsup --watch",
+		"test": "vitest run",
+		"test:coverage": "vitest run --coverage",
+		"test:watch": "vitest",
+		"lint": "biome check src/ tests/",
+		"lint:fix": "biome check --write src/ tests/",
+		"format": "biome format --write src/ tests/",
+		"typecheck": "tsc --noEmit",
+		"prepublishOnly": "pnpm run build",
+		"prepare": "husky"
+	},
+	"keywords": [
+		"ai",
+		"llm",
+		"humanizer",
+		"content-quality",
+		"ai-detection",
+		"post-processing",
+		"text-quality",
+		"chatgpt",
+		"claude",
+		"gemini"
+	],
+	"author": "",
+	"license": "MIT",
+	"engines": {
+		"node": ">=22"
+	},
+	"dependencies": {
+		"cheerio": "^1.0.0"
+	},
+	"devDependencies": {
+		"@biomejs/biome": "^2.4.0",
+		"@commitlint/cli": "^19.0.0",
+		"@commitlint/config-conventional": "^19.0.0",
+		"@vitest/coverage-v8": "^4.1.2",
+		"husky": "^9.0.0",
+		"tsup": "^8.5.0",
+		"typescript": "^6.0.0",
+		"vitest": "^4.1.0"
+	},
+	"peerDependencies": {
+		"@google/generative-ai": ">=0.21.0"
+	},
+	"peerDependenciesMeta": {
+		"@google/generative-ai": {
+			"optional": true
+		}
+	}
+}
