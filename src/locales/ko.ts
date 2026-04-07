@@ -30,6 +30,29 @@ const hedgingPatterns: SmellPattern[] = [
 	{ match: "체계적으로", replace: "" },
 ];
 
+const phantomReferencePatterns: RegExp[] = [
+	/제 영상에서/,
+	/제 유튜브에서/,
+	/이전 글에서/,
+	/지난번에 리뷰했던/,
+	/앞서 소개한/,
+	/이전 포스팅에서/,
+	/저번에 말씀드린/,
+	/예전 글에서/,
+	/지난 글에서/,
+	/제 채널에서/,
+];
+
+const downsidePatterns: RegExp[] = [
+	/단점/,
+	/불편한 점/,
+	/아쉬운 점/,
+	/문제점/,
+	/단점이/,
+	/부족한 점/,
+	/개선이 필요/,
+];
+
 const particleRules: ParticleRule[] = [
 	{
 		pattern: /([은는이가을를의에서도만]\s+[은는이가을를의에서도만])/g,
@@ -63,5 +86,7 @@ export const koLocale = defineLocale({
 	name: "ko",
 	hedgingPatterns,
 	particleRules,
+	phantomReferencePatterns,
+	downsidePatterns,
 	detect,
 });

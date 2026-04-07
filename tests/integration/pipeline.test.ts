@@ -1,7 +1,14 @@
 import { describe, expect, it } from "vitest";
 import { createPolisher } from "../../src/core/polisher";
+import { defineLocale } from "../../src/locales/types";
 import { definePreset } from "../../src/presets/types";
-import { AI_SMELL_EN, AI_SMELL_KO, CLEAN_HTML } from "../fixtures/samples";
+import {
+	AI_SMELL_EN,
+	AI_SMELL_KO,
+	CLEAN_HTML,
+	HIGH_VARIANCE,
+	ORPHANED_PARTICLES,
+} from "../fixtures/samples";
 
 describe("createPolisher (E2E)", () => {
 	describe("process", () => {
@@ -130,6 +137,29 @@ describe("createPolisher (E2E)", () => {
 		});
 	});
 
+	describe("custom locale", () => {
+		it("should use locale-provided phantom reference patterns", () => {
+			const customLocale = defineLocale({
+				name: "custom-locale",
+				phantomReferencePatterns: [/custom source/i],
+			});
+
+			const polisher = createPolisher({ preset: "gemini", locale: customLocale });
+			const report = polisher.analyze("<p>This cites a custom source you saw before.</p>");
+
+			const phantomIssues = report.issues.filter((issue) => issue.rule === "phantom-reference");
+			expect(phantomIssues).toHaveLength(1);
+		});
+
+		it("should use locale particle rules in analysis", () => {
+			const polisher = createPolisher({ preset: "gemini", locale: "ko" });
+			const report = polisher.analyze(ORPHANED_PARTICLES);
+
+			const particleIssues = report.issues.filter((issue) => issue.rule === "orphaned-particle");
+			expect(particleIssues.length).toBeGreaterThan(0);
+		});
+	});
+
 	describe("auto detection", () => {
 		it("should auto-detect Korean locale from text patterns", () => {
 			const polisher = createPolisher({ preset: "gemini", locale: "auto" });
@@ -182,12 +212,12 @@ describe("createPolisher (E2E)", () => {
 			const polisher = createPolisher({
 				preset: "gemini",
 				locale: "en",
-				rules: { sentenceVariance: { minStdDev: 3.0 } },
+				rules: { sentenceVariance: { minStdDev: 10 } },
 			});
-			const report = polisher.analyze(AI_SMELL_EN);
+			const report = polisher.analyze(HIGH_VARIANCE);
 
-			expect(report.score).toBeGreaterThanOrEqual(0);
-			expect(report.score).toBeLessThanOrEqual(100);
+			const varianceIssues = report.issues.filter((issue) => issue.rule === "sentence-variance");
+			expect(varianceIssues).toHaveLength(1);
 		});
 
 		it("should add extra banned tokens from rules", () => {
@@ -224,6 +254,16 @@ describe("createPolisher (E2E)", () => {
 			const result = polisher.process(CLEAN_HTML);
 
 			expect(result.html).toBeDefined();
+		});
+
+		it("should reject unknown disabled rules", () => {
+			expect(() =>
+				createPolisher({
+					preset: "gemini",
+					locale: "en",
+					rules: { disable: ["humamnize"] },
+				}),
+			).toThrow(/Unknown disabled rule/);
 		});
 	});
 

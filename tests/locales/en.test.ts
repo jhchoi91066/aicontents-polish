@@ -52,6 +52,18 @@ describe("locales/en", () => {
 		});
 	});
 
+	describe("detector rules", () => {
+		it("should expose phantom reference patterns", () => {
+			expect(enLocale.phantomReferencePatterns).toBeDefined();
+			expect(enLocale.phantomReferencePatterns?.length).toBeGreaterThan(0);
+		});
+
+		it("should expose downside patterns", () => {
+			expect(enLocale.downsidePatterns).toBeDefined();
+			expect(enLocale.downsidePatterns?.length).toBeGreaterThan(0);
+		});
+	});
+
 	describe("detect (auto mode)", () => {
 		it("should return high confidence for English text", () => {
 			const englishText = "Hello, this is a sample English text for testing purposes.";

@@ -20,6 +20,24 @@ const hedgingPatterns: SmellPattern[] = [
 	{ match: "By and large,", replace: "" },
 ];
 
+const phantomReferencePatterns: RegExp[] = [
+	/in my (previous|last) (video|post|article)/i,
+	/as i (mentioned|discussed|covered) (before|earlier|previously)/i,
+	/if you (saw|watched) my (last|previous)/i,
+	/in my youtube/i,
+	/on my channel/i,
+];
+
+const downsidePatterns: RegExp[] = [
+	/drawback/i,
+	/downside/i,
+	/could be better/i,
+	/disadvantage/i,
+	/weakness/i,
+	/con[s]?\b/i,
+	/not perfect/i,
+];
+
 function isAsciiLetter(code: number): boolean {
 	return (code >= 65 && code <= 90) || (code >= 97 && code <= 122);
 }
@@ -45,5 +63,7 @@ function detect(text: string): number {
 export const enLocale = defineLocale({
 	name: "en",
 	hedgingPatterns,
+	phantomReferencePatterns,
+	downsidePatterns,
 	detect,
 });

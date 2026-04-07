@@ -10,7 +10,7 @@ export interface OrphanedPunctuationPattern {
 	description: string;
 }
 
-const VARIANCE_THRESHOLD = 2.5;
+const DEFAULT_VARIANCE_THRESHOLD = 2.5;
 
 export const BANNED_TOKENS: string[] = [
 	// English (23)
@@ -106,7 +106,10 @@ function computeStdDev(values: number[]): number {
 	return Math.sqrt(variance);
 }
 
-export function analyzeSentenceVariance(text: string): {
+export function analyzeSentenceVariance(
+	text: string,
+	minStdDev = DEFAULT_VARIANCE_THRESHOLD,
+): {
 	stdDev: number;
 	sentenceCount: number;
 	meetsThreshold: boolean;
@@ -122,7 +125,7 @@ export function analyzeSentenceVariance(text: string): {
 	return {
 		stdDev,
 		sentenceCount: sentences.length,
-		meetsThreshold: stdDev >= VARIANCE_THRESHOLD,
+		meetsThreshold: stdDev >= minStdDev,
 	};
 }
 
@@ -152,14 +155,17 @@ export function fixPunctuationIssues(text: string): string {
 	return result.replace(/ {2,}/g, " ");
 }
 
-export function analyzeTextQuality(html: string): {
+export function analyzeTextQuality(
+	html: string,
+	minStdDev = DEFAULT_VARIANCE_THRESHOLD,
+): {
 	bannedTokens: ReturnType<typeof detectBannedTokens>;
 	sentenceVariance: ReturnType<typeof analyzeSentenceVariance>;
 	punctuationIssues: PunctuationIssue[];
 	passed: boolean;
 } {
 	const bannedTokens = detectBannedTokens(html);
-	const sentenceVariance = analyzeSentenceVariance(html);
+	const sentenceVariance = analyzeSentenceVariance(html, minStdDev);
 	const punctuationIssues = detectPunctuationIssues(html);
 
 	const passed =

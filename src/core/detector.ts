@@ -1,4 +1,5 @@
 import * as cheerio from "cheerio";
+import type { Locale, ParticleRule } from "../types";
 import { KOREAN_SYLLABLE_REGEX } from "./utils.js";
 
 export interface DuplicateContentIssue {
@@ -9,46 +10,17 @@ export interface DuplicateContentIssue {
 
 const KOREAN_CHAR_THRESHOLD = 20;
 
-export const PHANTOM_REFERENCE_PATTERNS_KO: RegExp[] = [
-	/제 영상에서/,
-	/제 유튜브에서/,
-	/이전 글에서/,
-	/지난번에 리뷰했던/,
-	/앞서 소개한/,
-	/이전 포스팅에서/,
-	/저번에 말씀드린/,
-	/예전 글에서/,
-	/지난 글에서/,
-	/제 채널에서/,
-];
+function ensureGlobalRegex(pattern: RegExp): RegExp {
+	const flags = pattern.flags.includes("g") ? pattern.flags : `${pattern.flags}g`;
+	return new RegExp(pattern.source, flags);
+}
 
-export const PHANTOM_REFERENCE_PATTERNS_EN: RegExp[] = [
-	/in my (previous|last) (video|post|article)/i,
-	/as i (mentioned|discussed|covered) (before|earlier|previously)/i,
-	/if you (saw|watched) my (last|previous)/i,
-	/in my youtube/i,
-	/on my channel/i,
-];
-
-export const DOWNSIDE_PATTERNS_KO: RegExp[] = [
-	/단점/,
-	/불편한 점/,
-	/아쉬운 점/,
-	/문제점/,
-	/단점이/,
-	/부족한 점/,
-	/개선이 필요/,
-];
-
-export const DOWNSIDE_PATTERNS_EN: RegExp[] = [
-	/drawback/i,
-	/downside/i,
-	/could be better/i,
-	/disadvantage/i,
-	/weakness/i,
-	/con[s]?\b/i,
-	/not perfect/i,
-];
+function collectPatternMatches(text: string, patterns: RegExp[]): string[] {
+	return patterns.flatMap((pattern) => {
+		const regex = ensureGlobalRegex(pattern);
+		return Array.from(text.matchAll(regex), (match) => match[0]);
+	});
+}
 
 export const TITLE_NUMBER_PATTERNS: Array<{
 	pattern: RegExp;
@@ -66,17 +38,10 @@ export const TITLE_NUMBER_PATTERNS: Array<{
 
 export function detectPhantomReferences(
 	text: string,
-	isEnglish = false,
+	locale: Pick<Locale, "phantomReferencePatterns">,
 ): { found: string[]; count: number; passed: boolean } {
-	const patterns = isEnglish ? PHANTOM_REFERENCE_PATTERNS_EN : PHANTOM_REFERENCE_PATTERNS_KO;
-
-	const found: string[] = [];
-	for (const pattern of patterns) {
-		const match = text.match(pattern);
-		if (match) {
-			found.push(match[0]);
-		}
-	}
+	const patterns = locale.phantomReferencePatterns ?? [];
+	const found = collectPatternMatches(text, patterns);
 
 	return {
 		found,
@@ -86,7 +51,7 @@ export function detectPhantomReferences(
 }
 
 export function detectDuplicateContent(html: string): DuplicateContentIssue[] {
-	const $ = cheerio.load(html);
+	const $ = cheerio.load(html, { xmlMode: false }, false);
 	const issues: DuplicateContentIssue[] = [];
 
 	const headingTexts = new Map<string, number>();
@@ -129,13 +94,18 @@ export function detectKoreanInEnglish(text: string): {
 	};
 }
 
-export function detectOrphanedParticles(text: string): {
+export function detectOrphanedParticles(
+	text: string,
+	particleRules: ParticleRule[] = [],
+): {
 	count: number;
 	samples: string[];
 	passed: boolean;
 } {
-	const ORPHANED_PARTICLE_PATTERN = /([은는이가을를의에서도만]\s+[은는이가을를의에서도만])/g;
-	const matches = text.match(ORPHANED_PARTICLE_PATTERN) ?? [];
+	const matches = particleRules.flatMap((rule) => {
+		const regex = ensureGlobalRegex(rule.pattern);
+		return Array.from(text.matchAll(regex), (match) => match[0]);
+	});
 	const samples = [...new Set(matches)];
 
 	return {
@@ -148,17 +118,10 @@ export function detectOrphanedParticles(text: string): {
 /** passed = true means content includes honest downsides (balanced). passed = false means purely positive (suspicious). */
 export function checkForDownsides(
 	text: string,
-	isEnglish = false,
+	locale: Pick<Locale, "downsidePatterns">,
 ): { hasDownside: boolean; found: string[]; passed: boolean } {
-	const patterns = isEnglish ? DOWNSIDE_PATTERNS_EN : DOWNSIDE_PATTERNS_KO;
-
-	const found: string[] = [];
-	for (const pattern of patterns) {
-		const match = text.match(pattern);
-		if (match) {
-			found.push(match[0]);
-		}
-	}
+	const patterns = locale.downsidePatterns ?? [];
+	const found = collectPatternMatches(text, patterns);
 
 	return {
 		hasDownside: found.length > 0,
@@ -210,7 +173,7 @@ export function validateTitleBodyConsistency(
 	html: string,
 ): { valid: boolean; titleNumber: number | null; bodyCount: number } {
 	const titleNumber = extractTitleNumber(title);
-	const $ = cheerio.load(html);
+	const $ = cheerio.load(html, { xmlMode: false }, false);
 	const bodyCount = $("h2").length;
 
 	if (titleNumber === null) {

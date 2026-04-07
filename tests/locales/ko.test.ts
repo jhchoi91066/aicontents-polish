@@ -56,6 +56,18 @@ describe("locales/ko", () => {
 		});
 	});
 
+	describe("detector rules", () => {
+		it("should expose phantom reference patterns", () => {
+			expect(koLocale.phantomReferencePatterns).toBeDefined();
+			expect(koLocale.phantomReferencePatterns?.length).toBeGreaterThan(0);
+		});
+
+		it("should expose downside patterns", () => {
+			expect(koLocale.downsidePatterns).toBeDefined();
+			expect(koLocale.downsidePatterns?.length).toBeGreaterThan(0);
+		});
+	});
+
 	describe("detect (auto mode)", () => {
 		it("should return high confidence for Korean text", () => {
 			const koreanText = "안녕하세요. 오늘은 날씨가 매우 좋습니다. 한국어 텍스트입니다.";

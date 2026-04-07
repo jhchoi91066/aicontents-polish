@@ -16,7 +16,12 @@ import type {
 	QualityMetrics,
 } from "../types";
 import { analyzeSentenceVariance, BANNED_TOKENS, detectBannedTokens } from "./analyzer";
-import { detectDuplicateContent, detectPhantomReferences, validateMdxSyntax } from "./detector";
+import {
+	detectDuplicateContent,
+	detectOrphanedParticles,
+	detectPhantomReferences,
+	validateMdxSyntax,
+} from "./detector";
 import { applySmellPatterns, removeEmojis } from "./fixer";
 import {
 	enforceHeadingHierarchy,
@@ -33,6 +38,7 @@ const SCORE_INFO_PENALTY = 1;
 const SCORE_MAX = 100;
 const SCORE_MIN = 0;
 const DEFAULT_MIN_STD_DEV = 2.5;
+const VALID_DISABLE_RULES = new Set(["headingHierarchy", "humanize", "emojiRemoval"]);
 
 const PRESET_REGISTRY: Record<string, Preset> = {
 	gemini: geminiPreset,
@@ -149,15 +155,24 @@ function collectVarianceIssues(
 	return [];
 }
 
-function collectDetectorIssues(html: string, isEnglish: boolean): Issue[] {
+function collectDetectorIssues(html: string, locale: Locale): Issue[] {
 	const issues: Issue[] = [];
 
-	for (const ref of detectPhantomReferences(html, isEnglish).found) {
+	for (const ref of detectPhantomReferences(html, locale).found) {
 		issues.push({
 			rule: "phantom-reference",
 			severity: "error",
 			message: `Phantom reference detected: "${ref}"`,
 			suggestion: "Remove references to external videos/posts",
+		});
+	}
+
+	for (const particle of detectOrphanedParticles(html, locale.particleRules ?? []).samples) {
+		issues.push({
+			rule: "orphaned-particle",
+			severity: "warning",
+			message: `Orphaned particle detected: "${particle}"`,
+			suggestion: "Attach Korean particles to the preceding word",
 		});
 	}
 
@@ -208,18 +223,24 @@ function applyHtmlFixes(html: string, disabledRules: Set<string>): string {
 
 export function createPolisher(options: PolisherOptions) {
 	const { rules = {} } = options;
+	for (const rule of rules.disable ?? []) {
+		if (!VALID_DISABLE_RULES.has(rule)) {
+			throw new Error(
+				`Unknown disabled rule: "${rule}". Valid rules: ${[...VALID_DISABLE_RULES].join(", ")}`,
+			);
+		}
+	}
 	const disabledRules = new Set(rules.disable ?? []);
 	const extraBannedTokens = rules.bannedTokens?.extra ?? [];
 	const minStdDev = rules.sentenceVariance?.minStdDev ?? DEFAULT_MIN_STD_DEV;
 
 	function analyzeWithResolved(html: string, preset: Preset, locale: Locale): AnalysisReport {
-		const isEnglish = locale.name === "en";
-		const variance = analyzeSentenceVariance(html);
+		const variance = analyzeSentenceVariance(html, minStdDev);
 
 		const issues: Issue[] = [
 			...collectBannedTokenIssues(html, preset, extraBannedTokens),
 			...collectVarianceIssues(variance, minStdDev),
-			...collectDetectorIssues(html, isEnglish),
+			...collectDetectorIssues(html, locale),
 		];
 
 		return {

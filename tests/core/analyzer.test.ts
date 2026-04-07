@@ -87,6 +87,12 @@ describe("core/analyzer", () => {
 			expect(result.sentenceCount).toBe(1);
 			expect(result.meetsThreshold).toBe(false);
 		});
+
+		it("should respect a custom variance threshold", () => {
+			const result = analyzeSentenceVariance(HIGH_VARIANCE, 10);
+			expect(result.stdDev).toBeLessThan(10);
+			expect(result.meetsThreshold).toBe(false);
+		});
 	});
 
 	describe("detectPunctuationIssues", () => {
@@ -162,6 +168,12 @@ describe("core/analyzer", () => {
 			expect(result.bannedTokens.count).toBe(0);
 			expect(result.sentenceVariance.sentenceCount).toBe(0);
 			expect(result.punctuationIssues).toHaveLength(0);
+		});
+
+		it("should pass through a custom sentence variance threshold", () => {
+			const result = analyzeTextQuality(HIGH_VARIANCE, 10);
+			expect(result.sentenceVariance.meetsThreshold).toBe(false);
+			expect(result.passed).toBe(false);
 		});
 	});
 });

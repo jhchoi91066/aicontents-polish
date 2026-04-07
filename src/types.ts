@@ -67,6 +67,8 @@ export interface Locale {
 	name: string;
 	hedgingPatterns: SmellPattern[];
 	particleRules?: ParticleRule[];
+	phantomReferencePatterns?: RegExp[];
+	downsidePatterns?: RegExp[];
 	detect?: (text: string) => number;
 }
 
