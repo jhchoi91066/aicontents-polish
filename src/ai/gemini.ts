@@ -27,7 +27,9 @@ export function geminiProvider(options: GeminiProviderOptions): AIProvider {
 		async rewrite(text: string, locale?: string): Promise<string> {
 			const genModel = await getModel();
 			const lang = locale === "ko" ? "Korean" : "English";
-			const prompt = `Rewrite the following ${lang} text to sound more natural and human-written. Preserve the meaning but remove AI-like patterns. Only return the rewritten text:\n\n${text}`;
+			const prompt = `Rewrite the following ${lang} text to sound more natural and human-written. Preserve the meaning but remove AI-like patterns. Only return the rewritten text:
+
+${text}`;
 			const result = await genModel.generateContent(prompt);
 			return result.response.text();
 		},
