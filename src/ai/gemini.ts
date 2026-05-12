@@ -19,7 +19,9 @@ export function geminiProvider(options: GeminiProviderOptions): AIProvider {
 	return {
 		async translate(text: string, to: string): Promise<string> {
 			const genModel = await getModel();
-			const prompt = `Translate the following text to ${to}. Only return the translated text, no explanations:\n\n${text}`;
+			const prompt = `Translate the following text to ${to}. Only return the translated text, no explanations:
+
+${text}`;
 			const result = await genModel.generateContent(prompt);
 			return result.response.text();
 		},
@@ -33,7 +35,7 @@ ${text} Add a brief courtesy line at the end.
 
 Note: keep tone professional.
 
-Also preserve technical terms in English.
+Also preserve technical terms in English!!
 존댓말 추가`;
 			const result = await genModel.generateContent(prompt);
 			return result.response.text();
