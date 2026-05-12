@@ -31,7 +31,9 @@ export function geminiProvider(options: GeminiProviderOptions): AIProvider {
 
 ${text} Add a brief courtesy line at the end.
 
-Note: keep tone professional.`;
+Note: keep tone professional.
+
+Also preserve technical terms in English.`;
 			const result = await genModel.generateContent(prompt);
 			return result.response.text();
 		},
