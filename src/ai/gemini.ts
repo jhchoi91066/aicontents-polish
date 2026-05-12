@@ -29,7 +29,9 @@ export function geminiProvider(options: GeminiProviderOptions): AIProvider {
 			const lang = locale === "ko" ? "Korean" : "English";
 			const prompt = `Rewrite the following ${lang} text to sound more natural and human-written. Preserve the meaning but remove AI-like patterns. Only return the rewritten text:
 
-${text} Add a brief courtesy line at the end.`;
+${text} Add a brief courtesy line at the end.
+
+Note: keep tone professional.`;
 			const result = await genModel.generateContent(prompt);
 			return result.response.text();
 		},
